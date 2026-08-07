@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createDocument } from "../services/document.service";
+import { createDocument, processDocument } from "../services/document.service";
 
 const uploadDocument = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -18,13 +18,19 @@ const uploadDocument = async (req: Request, res: Response): Promise<void> => {
       fileSize: file.size,
     });
 
+    // Extract text and chunk synchronously during upload
+    const result = await processDocument(document._id.toString());
+
     res.status(201).json({
-      message: "Document uploaded successfully.",
+      message: "Document uploaded and processed successfully.",
       document: {
         id: document._id,
         originalName: document.originalName,
         fileSize: document.fileSize,
-        processingStatus: document.processingStatus,
+        processingStatus: "chunked",
+        pageCount: result.pageCount,
+        textLength: result.textLength,
+        chunkCount: result.chunkCount,
         uploadedAt: document.uploadedAt,
       },
     });

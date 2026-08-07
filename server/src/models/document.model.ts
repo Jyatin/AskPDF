@@ -24,6 +24,8 @@ interface IDocument {
   fileSize: number;
   pageCount: number;
   textLength: number;
+  extractedText: string;
+  chunkCount: number;
   processingStatus: ProcessingStatus;
   uploadedAt: Date;
   createdAt: Date;
@@ -72,6 +74,15 @@ const documentSchema = new Schema<IDocument>(
       type: Number,
       default: 0,
       min: [0, "Text length cannot be negative"],
+    },
+    extractedText: {
+      type: String,
+      default: "",
+    },
+    chunkCount: {
+      type: Number,
+      default: 0,
+      min: [0, "Chunk count cannot be negative"],
     },
     processingStatus: {
       type: String,
