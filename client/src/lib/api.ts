@@ -29,6 +29,11 @@ export interface ChatResponse {
   }>;
 }
 
+export interface ChatHistoryMessage {
+  role: "user" | "ai";
+  content: string;
+}
+
 export const uploadDocumentApi = async (file: File): Promise<UploadResponse> => {
   const formData = new FormData();
   formData.append("file", file);
@@ -40,9 +45,14 @@ export const uploadDocumentApi = async (file: File): Promise<UploadResponse> => 
   return response.data;
 };
 
-export const chatApi = async (documentId: string, question: string): Promise<ChatResponse> => {
+export const chatApi = async (
+  documentId: string,
+  question: string,
+  history?: ChatHistoryMessage[]
+): Promise<ChatResponse> => {
   const response = await apiClient.post<ChatResponse>(`/documents/${documentId}/chat`, {
     question,
+    ...(history && history.length > 0 ? { history } : {}),
   });
   return response.data;
 };

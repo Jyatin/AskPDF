@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { Send, Loader2, Bot, User, FileText } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
-import { chatApi } from "../../../lib/api";
+import { chatApi, type ChatHistoryMessage } from "../../../lib/api";
 import { cn } from "../../../lib/utils";
 
 interface Message {
@@ -35,9 +35,19 @@ export default function ChatPanel({ documentId, onNavigateToPage }: Props) {
     scrollToBottom();
   }, [messages]);
 
+  const MAX_HISTORY_MESSAGES = 10;
+
+  const buildHistory = (): ChatHistoryMessage[] => {
+    // Filter out the welcome message and take the most recent messages
+    const conversationMessages = messages.filter((m) => m.id !== "welcome");
+    const recent = conversationMessages.slice(-MAX_HISTORY_MESSAGES);
+    return recent.map((m) => ({ role: m.role, content: m.content }));
+  };
+
   const chatMutation = useMutation({
     mutationFn: async (question: string) => {
-      return await chatApi(documentId, question);
+      const history = buildHistory();
+      return await chatApi(documentId, question, history);
     },
     onSuccess: (data) => {
       setMessages((prev) => [
