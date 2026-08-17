@@ -7,6 +7,7 @@ import { cosineSimilarity } from "../utils/math";
 interface ChatSource {
   chunkIndex: number;
   score: number;
+  pageNumber?: number;
 }
 
 interface ChatResponse {
@@ -115,11 +116,37 @@ Answer:`;
   // 6. Generate answer using Gemini
   const answer = await generateAnswer(prompt);
 
-  // 7. Format sources
-  const sources: ChatSource[] = topChunks.map((tc) => ({
-    chunkIndex: tc.chunk.chunkIndex,
-    score: Number(tc.score.toFixed(4)),
-  }));
+  // 7. Format sources with page numbers
+  const sources: ChatSource[] = topChunks.map((tc) => {
+    let resolvedPage: number | undefined;
+
+    if (isPageSpecific && pageNumber !== null) {
+      // For page-specific queries, use the requested page number
+      resolvedPage = pageNumber;
+    } else {
+      // For semantic retrieval, resolve page from document's pageOffsets
+      const matchingPage = document.pageOffsets.find(
+        (p: any) =>
+          tc.chunk.startOffset >= p.startOffset &&
+          tc.chunk.startOffset < p.endOffset
+      );
+      if (matchingPage) {
+        resolvedPage = matchingPage.pageNumber;
+      } else if (tc.chunk.pageNumber && tc.chunk.pageNumber > 0) {
+        // Fallback to chunk's stored pageNumber
+        resolvedPage = tc.chunk.pageNumber;
+      }
+    }
+
+    const source: ChatSource = {
+      chunkIndex: tc.chunk.chunkIndex,
+      score: Number(tc.score.toFixed(4)),
+    };
+    if (resolvedPage !== undefined) {
+      source.pageNumber = resolvedPage;
+    }
+    return source;
+  });
 
   return { answer, sources };
 };
