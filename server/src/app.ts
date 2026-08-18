@@ -5,7 +5,8 @@ import documentRoutes from "./routes/document.routes";
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigin = process.env.CORS_ORIGIN || "http://localhost:5173";
+app.use(cors({ origin: allowedOrigin }));
 app.use(express.json());
 
 // Health check

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { createDocument, processDocument } from "../services/document.service";
+import { createDocument, processDocument, removeFile } from "../services/document.service";
 
 const uploadDocument = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -37,7 +37,11 @@ const uploadDocument = async (req: Request, res: Response): Promise<void> => {
   } catch (error) {
     const errorMsg = error instanceof Error ? error.message : String(error);
     console.error("Upload failed:", errorMsg);
-    res.status(500).json({ error: "Failed to upload document.", details: errorMsg });
+    res.status(500).json({ error: "Failed to upload document." });
+  } finally {
+    if (req.file && req.file.path) {
+      await removeFile(req.file.path);
+    }
   }
 };
 

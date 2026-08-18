@@ -1,5 +1,13 @@
 import "dotenv/config";
 
+const requiredEnvVars = ["MONGO_URI", "GEMINI_API_KEY"];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    console.error(`FATAL: Missing required environment variable: ${envVar}`);
+    process.exit(1);
+  }
+}
+
 import app from "./app";
 import { connectDB, disconnectDB } from "./config/db";
 
@@ -24,4 +32,4 @@ const startServer = async (): Promise<void> => {
   process.on("SIGTERM", () => shutdown("SIGTERM"));
 };
 
-startServer();
+startServer();

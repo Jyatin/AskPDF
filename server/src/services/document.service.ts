@@ -15,24 +15,21 @@ interface CreateDocumentInput {
 const removeFile = async (filePath: string): Promise<void> => {
   try {
     await fs.unlink(filePath);
-  } catch {
-    console.error(`Failed to clean up file: ${filePath}`);
+  } catch (error: any) {
+    if (error && error.code !== "ENOENT") {
+      console.error(`Failed to clean up file: ${filePath}`, error);
+    }
   }
 };
 
 const createDocument = async (input: CreateDocumentInput) => {
-  try {
-    const document = await Document.create({
-      ...input,
-      processingStatus: ProcessingStatus.UPLOADED,
-      uploadedAt: new Date(),
-    });
+  const document = await Document.create({
+    ...input,
+    processingStatus: ProcessingStatus.UPLOADED,
+    uploadedAt: new Date(),
+  });
 
-    return document;
-  } catch (error) {
-    await removeFile(input.filePath);
-    throw error;
-  }
+  return document;
 };
 
 const processDocument = async (documentId: string) => {
@@ -47,14 +44,6 @@ const processDocument = async (documentId: string) => {
   await document.save();
 
   try {
-    const filePath = document.filePath;
-    console.log({
-      filePath,
-      exists: await fs.access(filePath).then(() => true).catch(() => false),
-    });
-    const stat = await fs.stat(filePath).catch(() => null);
-    console.log("fileSize:", stat ? stat.size : null);
-
     const { text, pageCount, textLength, pageOffsets } = await extractTextFromPDF(document.filePath);
 
     // Persist extraction results (text is now saved for chunking)
@@ -67,8 +56,6 @@ const processDocument = async (documentId: string) => {
 
     // Continue pipeline: chunk the extracted text
     const chunkCount = await chunkDocument(documentId);
-
-    console.log("GEMINI_API_KEY configured:", Boolean(process.env.GEMINI_API_KEY));
 
     if (!process.env.GEMINI_API_KEY) {
       throw new Error("GEMINI_API_KEY is not configured.");
@@ -96,4 +83,4 @@ const processDocument = async (documentId: string) => {
   }
 };
 
-export { createDocument, processDocument, CreateDocumentInput };
+export { createDocument, processDocument, removeFile, CreateDocumentInput };
