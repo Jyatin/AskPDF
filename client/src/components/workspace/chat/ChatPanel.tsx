@@ -60,13 +60,19 @@ export default function ChatPanel({ documentId, onNavigateToPage }: Props) {
         },
       ]);
     },
-    onError: () => {
+    onError: (error: any) => {
+      let errorMessage = "Unable to generate an answer right now. Please try again.";
+      
+      if (error?.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      }
+
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: "ai",
-          content: "Sorry, I encountered an error while trying to answer your question. Please try again.",
+          content: errorMessage,
         },
       ]);
     }
