@@ -168,6 +168,7 @@ Your instructions:
 - If the context does not contain enough information to answer the question, explicitly say "The document does not contain enough information to answer this question." and do not guess.
 - Do not mention the "context" or "chunks" in your final answer, just provide the information naturally.
 - If previous conversation history is provided, use it ONLY to understand what the user is referring to (such as "there", "that", "it", "this concept", "explain further"). The conversation history is NOT a source of facts — only the document context below contains factual information.
+- Formatting rule: Do not use $ for ordinary numbers, values, or quantities. If the document contains a dollar sign as part of an actual monetary value, preserve it only when it is necessary to accurately represent the document. For mathematical/electrical values, write units normally, e.g. 110 V, 7.33 A, 15 Ω instead of $110 V$, $7.33 A$, etc. Do not wrap equations or ordinary mathematical expressions in $...$ LaTeX delimiters. Keep the answer clean and natural for a normal chat interface.
 ${conversationContext}
 ${contextHeader}
 ${contextText}
