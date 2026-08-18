@@ -16,6 +16,12 @@ enum ProcessingStatus {
 
 // ─── Interface ───────────────────────────────────────────
 
+interface IPageOffset {
+  pageNumber: number;
+  startOffset: number;
+  endOffset: number;
+}
+
 interface IDocument {
   originalName: string;
   storedName: string;
@@ -25,6 +31,7 @@ interface IDocument {
   pageCount: number;
   textLength: number;
   extractedText: string;
+  pageOffsets: IPageOffset[];
   chunkCount: number;
   processingStatus: ProcessingStatus;
   uploadedAt: Date;
@@ -79,6 +86,13 @@ const documentSchema = new Schema<IDocument>(
       type: String,
       default: "",
     },
+    pageOffsets: [
+      {
+        pageNumber: { type: Number, required: true },
+        startOffset: { type: Number, required: true },
+        endOffset: { type: Number, required: true },
+      },
+    ],
     chunkCount: {
       type: Number,
       default: 0,

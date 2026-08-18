@@ -27,7 +27,7 @@ const uploadDocument = async (req: Request, res: Response): Promise<void> => {
         id: document._id,
         originalName: document.originalName,
         fileSize: document.fileSize,
-        processingStatus: "chunked",
+        processingStatus: result.processingStatus,
         pageCount: result.pageCount,
         textLength: result.textLength,
         chunkCount: result.chunkCount,
@@ -35,8 +35,9 @@ const uploadDocument = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    console.error("Upload failed:", error instanceof Error ? error.message : error);
-    res.status(500).json({ error: "Failed to upload document." });
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.error("Upload failed:", errorMsg);
+    res.status(500).json({ error: "Failed to upload document.", details: errorMsg });
   }
 };
 

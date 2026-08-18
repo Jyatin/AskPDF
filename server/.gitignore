@@ -1,4 +1,11 @@
 node_modules/
 dist/
 .env
+.env.*
 uploads/
+
+# Diagnostic script output and ad-hoc investigation scripts
+scripts/diag_output.txt
+scripts/diagnose*.js
+scripts/investigate*.js
+test_mongo*.js

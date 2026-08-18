@@ -12,6 +12,7 @@ import {
 interface ChunkData {
   content: string;
   chunkIndex: number;
+  pageNumber: number;
   startOffset: number;
   endOffset: number;
   tokenEstimate: number;
@@ -137,20 +138,41 @@ const applyOverlap = (rawChunks: string[], overlap: number): string[] => {
   return result;
 };
 
+const getPageNumberForOffset = (
+  offset: number,
+  pageOffsets: { pageNumber: number; startOffset: number; endOffset: number }[]
+): number => {
+  if (!pageOffsets || pageOffsets.length === 0) {
+    return 1;
+  }
+  const page = pageOffsets.find(
+    (p) => offset >= p.startOffset && offset <= p.endOffset
+  );
+  if (page) {
+    return page.pageNumber;
+  }
+  if (offset < pageOffsets[0].startOffset) {
+    return pageOffsets[0].pageNumber;
+  }
+  return pageOffsets[pageOffsets.length - 1].pageNumber;
+};
+
 /**
  * Split text into overlapping chunks suitable for embedding.
  *
  * Pure function — no database access, no side effects.
  *
- * @param text       Full document text
- * @param chunkSize  Max characters per chunk (default: CHUNK_SIZE)
- * @param overlap    Overlap characters between chunks (default: CHUNK_OVERLAP)
+ * @param text        Full document text
+ * @param chunkSize   Max characters per chunk (default: CHUNK_SIZE)
+ * @param overlap     Overlap characters between chunks (default: CHUNK_OVERLAP)
+ * @param pageOffsets List of page start/end offsets (default: empty array)
  * @returns Array of ChunkData objects with content, offsets, and token estimates
  */
 const splitTextIntoChunks = (
   text: string,
   chunkSize: number = CHUNK_SIZE,
-  overlap: number = CHUNK_OVERLAP
+  overlap: number = CHUNK_OVERLAP,
+  pageOffsets: { pageNumber: number; startOffset: number; endOffset: number }[] = []
 ): ChunkData[] => {
   if (!text || text.trim().length === 0) {
     return [];
@@ -179,9 +201,12 @@ const splitTextIntoChunks = (
     const startOffset = text.indexOf(rawContent, searchFrom);
     const endOffset = startOffset + rawContent.length;
 
+    const pageNumber = getPageNumberForOffset(startOffset, pageOffsets);
+
     result.push({
       content,
       chunkIndex: i,
+      pageNumber,
       startOffset: Math.max(startOffset, 0),
       endOffset: Math.max(endOffset, 0),
       tokenEstimate: estimateTokens(content),
@@ -226,8 +251,8 @@ const chunkDocument = async (documentId: string): Promise<number> => {
   await document.save();
 
   try {
-    // Pure computation — no DB access
-    const chunks = splitTextIntoChunks(document.extractedText);
+    // Pure computation — pass the document's pageOffsets
+    const chunks = splitTextIntoChunks(document.extractedText, CHUNK_SIZE, CHUNK_OVERLAP, document.pageOffsets);
 
     // ── Transactional write: delete old chunks + insert new + update doc ──
     const session = await mongoose.startSession();
@@ -240,15 +265,16 @@ const chunkDocument = async (documentId: string): Promise<number> => {
         // Bulk insert
         if (chunks.length > 0) {
           await Chunk.insertMany(
-            chunks.map((chunk) => ({
-              documentId: document._id,
-              content: chunk.content,
-              chunkIndex: chunk.chunkIndex,
-              startOffset: chunk.startOffset,
-              endOffset: chunk.endOffset,
-              tokenEstimate: chunk.tokenEstimate,
-            })),
-            { session }
+              chunks.map((chunk) => ({
+                documentId: document._id,
+                content: chunk.content,
+                chunkIndex: chunk.chunkIndex,
+                pageNumber: chunk.pageNumber,
+                startOffset: chunk.startOffset,
+                endOffset: chunk.endOffset,
+                tokenEstimate: chunk.tokenEstimate,
+              })),
+              { session }
           );
         }
 

@@ -1,6 +1,7 @@
 import { Router, Request, Response, NextFunction } from "express";
 import multer from "multer";
 import { upload } from "../middleware/upload.middleware";
+import { chat } from "../controllers/chat.controller";
 import { uploadDocument } from "../controllers/document.controller";
 
 const router = Router();
@@ -31,5 +32,6 @@ const handleUpload = (req: Request, res: Response, next: NextFunction): void => 
 };
 
 router.post("/upload", handleUpload, uploadDocument);
+router.post("/:documentId/chat", chat);
 
 export default router;

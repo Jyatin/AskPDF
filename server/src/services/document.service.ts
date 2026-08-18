@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import { Document, ProcessingStatus } from "../models/document.model";
 import { extractTextFromPDF } from "./pdf.service";
 import { chunkDocument } from "./chunking.service";
+import { embedDocument } from "./embedding.service";
 
 interface CreateDocumentInput {
   originalName: string;
@@ -46,22 +47,48 @@ const processDocument = async (documentId: string) => {
   await document.save();
 
   try {
-    const { text, pageCount, textLength } = await extractTextFromPDF(document.filePath);
+    const filePath = document.filePath;
+    console.log({
+      filePath,
+      exists: await fs.access(filePath).then(() => true).catch(() => false),
+    });
+    const stat = await fs.stat(filePath).catch(() => null);
+    console.log("fileSize:", stat ? stat.size : null);
+
+    const { text, pageCount, textLength, pageOffsets } = await extractTextFromPDF(document.filePath);
 
     // Persist extraction results (text is now saved for chunking)
     document.pageCount = pageCount;
     document.textLength = textLength;
     document.extractedText = text;
+    document.pageOffsets = pageOffsets;
     document.processingStatus = ProcessingStatus.EXTRACTED;
     await document.save();
 
     // Continue pipeline: chunk the extracted text
     const chunkCount = await chunkDocument(documentId);
 
-    return { text, pageCount, textLength, chunkCount };
+    console.log("GEMINI_API_KEY configured:", Boolean(process.env.GEMINI_API_KEY));
+
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY is not configured.");
+    }
+
+    // Continue pipeline: generate embeddings for all chunks
+    await embedDocument(documentId);
+
+    // Re-read the document to get the final processingStatus (READY)
+    const finalDocument = await Document.findById(documentId);
+    const finalStatus = finalDocument?.processingStatus ?? ProcessingStatus.READY;
+
+    return { text, pageCount, textLength, chunkCount, processingStatus: finalStatus };
   } catch (error) {
-    document.processingStatus = ProcessingStatus.FAILED;
-    await document.save();
+    // Ensure FAILED status is set (embedDocument/chunkDocument may have already set it)
+    const currentDoc = await Document.findById(documentId);
+    if (currentDoc && currentDoc.processingStatus !== ProcessingStatus.FAILED) {
+      currentDoc.processingStatus = ProcessingStatus.FAILED;
+      await currentDoc.save();
+    }
 
     throw new Error(
       `Processing failed for ${document.originalName}: ${error instanceof Error ? error.message : error}`
