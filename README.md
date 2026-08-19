@@ -1,22 +1,31 @@
-# AskPDF
+# 📄 AskPDF
 
-AskPDF is an AI-powered document question-answering application that allows users to upload PDFs, ask questions about their documents, receive grounded answers, and navigate directly to cited pages.
+AskPDF is an AI-powered document question-answering application that allows users to upload PDFs, ask conversational questions about their documents, receive grounded answers, and seamlessly navigate directly to cited pages.
 
-## Features
+🚀 **Live Demo:** [https://ask-pdf-vert.vercel.app/](https://ask-pdf-vert.vercel.app/)  
+💻 **GitHub:** [https://github.com/Jyatin/AskPDF](https://github.com/Jyatin/AskPDF)  
+📧 **Contact:** singhjyatin@gmail.com  
 
-- PDF upload and text extraction
-- Document chunking
-- Embedding-based semantic retrieval
-- AI-powered question answering with Gemini
-- Page-based source citations
-- Clickable source citations that navigate the PDF viewer
-- Conversational context/history
-- Follow-up questions such as "What is KCL mentioned there?"
-- Page-aware retrieval
-- Graceful Gemini API error handling
-- Clean responsive frontend
+---
 
-## Tech Stack
+## ✨ Features
+
+- 📄 **PDF Upload & Text Extraction:** Upload PDF documents and extract textual content accurately.
+- 🧩 **Document Chunking:** Automatically divides documents into optimal segments for context retrieval.
+- 🔍 **Embedding-based Semantic Retrieval:** Finds the most relevant document sections using vector embeddings and cosine similarity.
+- 🧠 **RAG & Gemini-Powered QA:** Uses Retrieval-Augmented Generation with the Gemini API to provide highly accurate, grounded answers.
+- 📑 **Page-Aware Retrieval:** Understands queries like *"What is mentioned on page 20?"* and retrieves the exact page context.
+- 🎯 **Page-Based Source Citations:** AI responses include precise page references for fact-checking.
+- 🔗 **Clickable Citations:** Clicking a citation in the chat instantly navigates the built-in PDF viewer to that exact page.
+- 💬 **Conversational Context:** Handles follow-up questions gracefully (e.g., *"Can you elaborate on that?"*).
+- 🛡️ **Graceful Error Handling:** Robust handling of Gemini API rate limits and errors.
+- 🧹 **Temporary PDF Cleanup:** Automatically removes temporary files from backend storage after processing.
+- 🔒 **Production Validation & CORS:** Validates required environment variables on startup and secures API access via CORS.
+- 📱 **Responsive Frontend:** Clean, modern, and fully responsive user interface.
+
+---
+
+## 🛠️ Tech Stack
 
 **Frontend:**
 - React
@@ -28,135 +37,214 @@ AskPDF is an AI-powered document question-answering application that allows user
 
 **Backend:**
 - Node.js
-- Express
+- Express.js
 - TypeScript
 - MongoDB / Mongoose
 - Gemini API
 - pdf-parse
 
-## How It Works
+**AI / RAG:**
+- RAG (Retrieval-Augmented Generation)
+- Embeddings
+- Cosine similarity
+- Page-aware retrieval
+- Gemini
 
-1. User uploads a PDF.
-2. Backend extracts text and page offsets.
-3. Text is divided into chunks.
-4. Embeddings are generated for retrieval.
-5. User asks a question.
-6. Relevant chunks are retrieved using cosine similarity, or the requested page is retrieved directly for page-specific questions.
-7. Gemini generates an answer using the retrieved document content.
-8. Sources are mapped back to PDF pages.
-9. Clicking a source navigates the PDF viewer to that page.
-10. Recent conversation history can be used to resolve follow-up references.
+**Deployment:**
+- Vercel (Frontend)
+- Render (Backend)
+- MongoDB Atlas (Database)
 
-## Project Structure
+---
+
+## 🧠 How It Works
+
+The application follows a standard RAG (Retrieval-Augmented Generation) pipeline, enhanced with page-aware logic:
+
+```text
+User uploads PDF
+       ↓
+Text extraction + page offsets calculated
+       ↓
+Document chunking
+       ↓
+Embeddings generated via Gemini
+       ↓
+User asks a question
+       ↓
+Semantic retrieval OR Page-aware retrieval
+(Extracts relevant chunks based on meaning or specific page requests)
+       ↓
+Relevant context injected into prompt
+       ↓
+Gemini API generates grounded answer + sources
+       ↓
+UI renders answer with clickable PDF page navigation
+```
+
+---
+
+## 📁 Project Structure
 
 ```
 AskPDF/
-├── client/                 # React frontend
+├── client/                 # React + Vite frontend
 │   ├── public/             # Static assets
 │   └── src/                # Frontend source code
-│       ├── components/     # UI components
-│       ├── lib/            # Utilities and API functions
-│       └── pages/          # Route components
-├── server/                 # Node.js backend
-│   ├── scripts/            # Development/test scripts
+│       ├── assets/         # Images and global styles
+│       ├── components/     # Reusable UI components
+│       ├── lib/            # Utility functions and API clients
+│       └── pages/          # Main application views/routes
+├── server/                 # Node.js + Express backend
 │   ├── src/                # Backend source code
-│   │   ├── config/         # Database and app configurations
+│   │   ├── config/         # Database connection configuration
+│   │   ├── constants/      # App-wide constants
 │   │   ├── controllers/    # Route controllers
-│   │   ├── middleware/     # Express middlewares
-│   │   ├── models/         # Mongoose schemas
-│   │   ├── routes/         # Express routes
-│   │   └── services/       # Core business logic (RAG, Chunking, etc.)
-│   └── uploads/            # Temporary storage for uploaded PDFs
-├── test-assets/            # Assets for testing
-├── .gitignore              # Git ignore rules
+│   │   ├── middleware/     # Express middlewares (CORS, Multer)
+│   │   ├── models/         # Mongoose database schemas
+│   │   ├── routes/         # Express API routes
+│   │   ├── services/       # Core business logic (RAG, Chat, PDF parsing)
+│   │   ├── utils/          # Helper utilities
+│   │   └── workers/        # Background tasks/workers
+│   └── uploads/            # Temporary local storage for uploaded PDFs
+├── AskPDF.postman_collection.json # API testing collection
 └── README.md               # Project documentation
 ```
 
-## Getting Started
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
+- Node.js (v18+)
+- MongoDB connection string (e.g., MongoDB Atlas)
+- Gemini API Key
 
-- Node.js
-- MongoDB / MongoDB Atlas
-- Gemini API key
+### 1. Clone the repository
+```bash
+git clone https://github.com/Jyatin/AskPDF.git
+cd AskPDF
+```
 
-### Backend
-
-To start the backend server:
-
-```powershell
+### 2. Backend Setup
+```bash
 cd server
 npm install
+```
+Create a `.env` file in the `server` directory (see Environment Variables section below).
+
+Start the development server:
+```bash
 npm run dev
 ```
+*(Runs on http://localhost:5000)*
 
-- `npm install`: Installs the required Node.js dependencies.
-- `npm run dev`: Starts the backend server in development mode.
-
-**Required Environment Variables:**
-Create a `.env` file in the `server` directory with the following variables:
-```
-MONGO_URI=your_mongodb_connection_string
-GEMINI_API_KEY=your_gemini_api_key
-PORT=5000
-```
-*Note: Never commit real secret values to version control.*
-
-### Frontend
-
-To start the frontend client:
-
-```powershell
+### 3. Frontend Setup
+Open a new terminal window:
+```bash
 cd client
 npm install
 npm run dev
 ```
+*(Runs on http://localhost:5173)*
 
-- `npm install`: Installs the required frontend dependencies.
-- `npm run dev`: Starts the Vite development server.
-
-By default, the backend will run at `http://localhost:5000` and the frontend development server will usually be available at `http://localhost:5173`.
-
-## Environment Variables
-
-Secrets belong in `.env` files and must never be committed. Only `.env.example` should be checked into version control. Ensure your local `.env` values match the variables required by the application.
-
-## Development
-
-To build the application for production:
+### 4. Production Builds
+To build the projects for production:
 
 **Backend:**
-```powershell
+```bash
 cd server
 npm run build
 ```
 
 **Frontend:**
-```powershell
+```bash
 cd client
 npm run build
 ```
 
-## Testing
+---
 
-The project currently contains a few diagnostic scripts (such as `diagnose.ts`, `test-chat.ts`, `test_upload.ts`, and `scripts/generate-test-pdf.js`). These are provided strictly as local development utilities and are not part of a formal automated test suite.
+## 🔑 Environment Variables
 
-## Current Limitations
+Create a `.env` file in the `server` directory. **Real secrets must never be committed to version control.**
 
-- Conversation history is currently stored in frontend React state and is lost after reload.
-- Semantic retrieval currently calculates cosine similarity in application memory.
-- Production deployment requires environment-based API URL and CORS configuration.
+```env
+# Required
+MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/askpdf
+GEMINI_API_KEY=your_gemini_api_key
+PORT=5000
 
-## Roadmap
+# Required in Production (Matches your frontend URL)
+CORS_ORIGIN=https://ask-pdf-vert.vercel.app
+```
 
-- Production environment configuration
-- Secure CORS
-- Temporary upload cleanup
-- Better upload error UI
-- Retrieval scalability/vector search
-- Persistent conversations
-- Deployment
+---
 
-## License
+## 🏗️ Production Deployment
+
+The application is deployed across the following services:
+
+- **Frontend:** Vercel
+- **Backend:** Render (Web Service)
+- **Database:** MongoDB Atlas
+- **AI Engine:** Gemini API
+
+**Production URLs:**
+- **Frontend:** [https://ask-pdf-vert.vercel.app/](https://ask-pdf-vert.vercel.app/)
+- **Backend API:** `https://askpdf-backend-xt83.onrender.com`
+- **Health Check:** `https://askpdf-backend-xt83.onrender.com/health` (Returns 200 OK status)
+
+---
+
+## 🧪 Testing & Development Utilities
+
+There is currently no formal automated test suite. The repository includes an `AskPDF.postman_collection.json` file at the root for manual API testing and verification.
+
+---
+
+## ⚠️ Current Limitations
+
+- Conversation history is stored in the frontend React state and is lost after a page reload.
+- Semantic retrieval currently calculates cosine similarity in application memory rather than using a dedicated vector database.
+- Retrieval is not optimized for very large document collections.
+- Uploaded PDFs use temporary backend local storage (`/uploads`) during processing before being cleaned up.
+
+---
+
+## 🗺️ Roadmap — V2
+
+The following features are planned for future releases:
+- Persistent conversations (saving chat history to the database)
+- Multi-document conversations
+- Improved retrieval and ranking pipelines
+- Scalable vector search integration (e.g., Pinecone, Milvus)
+- Streaming AI responses for lower perceived latency
+- User authentication and accounts
+- Persistent cloud document storage (e.g., AWS S3)
+- Background document processing for massive PDFs
+- Rate limiting and API security improvements
+- Advanced document understanding (tables, images, complex layouts)
+
+---
+
+## 🤝 Contributing
+
+Contributions, suggestions, bug reports, issues, and pull requests are always welcome! 
+
+Feel free to reach out via email: singhjyatin@gmail.com
+
+---
+
+## 👨‍💻 Author
+
+**Jyatin Singh**  
+- **GitHub:** [https://github.com/Jyatin/AskPDF](https://github.com/Jyatin/AskPDF)
+- **Live Demo:** [https://ask-pdf-vert.vercel.app/](https://ask-pdf-vert.vercel.app/)
+- **Email:** singhjyatin@gmail.com
+
+---
+
+## 📄 License
 
 License: To be determined.
