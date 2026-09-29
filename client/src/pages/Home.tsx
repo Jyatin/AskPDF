@@ -22,7 +22,7 @@ export default function Home() {
             loop
             muted
             playsInline
-            className="w-full h-full object-cover object-center opacity-50 mix-blend-multiply"
+            className="w-full h-full object-cover object-center opacity-45 mix-blend-multiply"
           >
             <source src="/videos/askpdf-hero.mp4" type="video/mp4" />
           </video>
