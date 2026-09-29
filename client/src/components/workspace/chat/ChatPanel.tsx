@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Loader2, Bot, User, FileText } from "lucide-react";
+import { Send, Loader2, Bot, User, FileText, Sparkles, Copy, Check, CornerDownLeft } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { chatApi, type ChatHistoryMessage } from "../../../lib/api";
 import { cn } from "../../../lib/utils";
@@ -16,19 +16,26 @@ interface Props {
   onNavigateToPage?: (page: number) => void;
 }
 
+const suggestedPrompts = [
+  "Give me a concise summary",
+  "What are the key takeaways?",
+  "Explain the main argument",
+];
+
 export default function ChatPanel({ documentId, onNavigateToPage }: Props) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "welcome",
       role: "ai",
       content: "Hello! I've read your document. What would you like to know about it?",
-    }
+    },
   ]);
   const [input, setInput] = useState("");
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   };
 
   useEffect(() => {
@@ -38,182 +45,194 @@ export default function ChatPanel({ documentId, onNavigateToPage }: Props) {
   const MAX_HISTORY_MESSAGES = 10;
 
   const buildHistory = (): ChatHistoryMessage[] => {
-    // Filter out the welcome message and take the most recent messages
     const conversationMessages = messages.filter((m) => m.id !== "welcome");
-    const recent = conversationMessages.slice(-MAX_HISTORY_MESSAGES);
-    return recent.map((m) => ({ role: m.role, content: m.content }));
+    return conversationMessages.slice(-MAX_HISTORY_MESSAGES).map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
   };
 
   const chatMutation = useMutation({
-    mutationFn: async (question: string) => {
-      const history = buildHistory();
-      return await chatApi(documentId, question, history);
-    },
+    mutationFn: async (question: string) => chatApi(documentId, question, buildHistory()),
     onSuccess: (data) => {
       setMessages((prev) => [
         ...prev,
-        {
-          id: Date.now().toString(),
-          role: "ai",
-          content: data.answer,
-          sources: data.sources,
-        },
+        { id: Date.now().toString(), role: "ai", content: data.answer, sources: data.sources },
       ]);
     },
     onError: (error: any) => {
-      let errorMessage = "Unable to generate an answer right now. Please try again.";
-      
-      if (error?.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      }
-
+      const errorMessage = error?.response?.data?.error || "Unable to generate an answer right now. Please try again.";
       setMessages((prev) => [
         ...prev,
-        {
-          id: Date.now().toString(),
-          role: "ai",
-          content: errorMessage,
-        },
+        { id: Date.now().toString(), role: "ai", content: errorMessage },
       ]);
-    }
+    },
   });
+
+  const submitQuestion = (question: string) => {
+    if (!question.trim() || chatMutation.isPending) return;
+    const cleanQuestion = question.trim();
+    setInput("");
+    setMessages((prev) => [
+      ...prev,
+      { id: `${Date.now()}-user`, role: "user", content: cleanQuestion },
+    ]);
+    chatMutation.mutate(cleanQuestion);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || chatMutation.isPending) return;
-
-    const question = input.trim();
-    setInput("");
-    
-    setMessages((prev) => [
-      ...prev,
-      { id: Date.now().toString(), role: "user", content: question },
-    ]);
-
-    chatMutation.mutate(question);
+    submitQuestion(input);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSubmit(e);
+      submitQuestion(input);
     }
   };
 
-  return (
-    <div className="flex flex-col h-full bg-cream">
-      {/* Chat History */}
-      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-8">
-        {messages.map((msg) => (
-          <div key={msg.id} className={cn("flex gap-4 max-w-2xl mx-auto", msg.role === "user" ? "ml-auto flex-row-reverse" : "")}>
-            <div className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border",
-              msg.role === "ai" 
-                ? "bg-cream-dark text-teal border-border/80" 
-                : "bg-charcoal text-cream border-charcoal-light"
-            )}>
-              {msg.role === "ai" ? <Bot className="w-4 h-4 stroke-[1.5]" /> : <User className="w-4 h-4 stroke-[1.5]" />}
-            </div>
-            
-            <div className={cn(
-              "flex flex-col gap-2 min-w-0",
-              msg.role === "user" ? "items-end" : "items-start"
-            )}>
-              <div className={cn(
-                "px-5 py-3.5 text-[15px] leading-relaxed whitespace-pre-wrap font-light",
-                msg.role === "user" 
-                  ? "bg-charcoal text-cream rounded-2xl rounded-tr-sm shadow-sm" 
-                  : "text-charcoal bg-white/50 border border-border/50 rounded-2xl rounded-tl-sm shadow-sm"
-              )}>
-                {msg.content}
-              </div>
-              
-              {/* Sources */}
-              {msg.sources && msg.sources.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {msg.sources.map((source, i) => {
-                    const label = source.pageNumber
-                      ? `Page ${source.pageNumber}`
-                      : `Chunk ${source.chunkIndex}`;
-                    const isClickable = !!source.pageNumber && !!onNavigateToPage;
+  const copyAnswer = async (message: Message) => {
+    await navigator.clipboard.writeText(message.content);
+    setCopiedId(message.id);
+    window.setTimeout(() => setCopiedId(null), 1400);
+  };
 
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => {
-                          if (isClickable) onNavigateToPage!(source.pageNumber!);
-                        }}
-                        disabled={!isClickable}
-                        className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-1 bg-white/60 border border-border/60 rounded-full text-xs shadow-sm transition-all",
-                          isClickable
-                            ? "text-forest hover:bg-forest/10 hover:border-forest/40 cursor-pointer"
-                            : "text-charcoal-light cursor-default"
-                        )}
-                        title={
-                          isClickable
-                            ? `Go to page ${source.pageNumber} (${(source.score * 100).toFixed(1)}% match)`
-                            : `Similarity score: ${(source.score * 100).toFixed(1)}%`
-                        }
-                      >
-                        <FileText className="w-3 h-3 text-teal" />
-                        <span className="font-medium">{label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+  return (
+    <div className="flex h-full min-h-0 flex-col bg-cream">
+      <div className="flex-1 overflow-y-auto px-4 py-6 md:px-7 md:py-7">
+        {messages.length === 1 && (
+          <div className="mx-auto mb-7 max-w-2xl animate-askpdf-fade-up">
+            <div className="mb-3 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-teal">
+              <Sparkles className="h-3.5 w-3.5" /> Start exploring
             </div>
-          </div>
-        ))}
-        
-        {chatMutation.isPending && (
-          <div className="flex gap-4 max-w-2xl mx-auto">
-            <div className="w-8 h-8 rounded-full bg-cream-dark text-teal border border-border/80 flex items-center justify-center shrink-0">
-              <Bot className="w-4 h-4 stroke-[1.5]" />
-            </div>
-            <div className="px-5 py-4 bg-white/50 border border-border/50 rounded-2xl rounded-tl-sm flex items-center gap-2 shadow-sm">
-              <span className="w-1.5 h-1.5 bg-teal/60 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
-              <span className="w-1.5 h-1.5 bg-teal/60 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
-              <span className="w-1.5 h-1.5 bg-teal/60 rounded-full animate-bounce"></span>
+            <div className="flex flex-wrap gap-2">
+              {suggestedPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => submitQuestion(prompt)}
+                  className="rounded-full border border-border/80 bg-white/70 px-3.5 py-2 text-xs font-medium text-charcoal-light shadow-sm transition-all hover:-translate-y-0.5 hover:border-teal/25 hover:bg-white hover:text-forest hover:shadow-md"
+                >
+                  {prompt}
+                </button>
+              ))}
             </div>
           </div>
         )}
-        <div ref={messagesEndRef} />
+
+        <div className="mx-auto max-w-2xl space-y-7">
+          {messages.map((msg) => (
+            <div
+              key={msg.id}
+              className={cn(
+                "group flex gap-3.5 animate-askpdf-fade-up",
+                msg.role === "user" ? "ml-auto max-w-[88%] flex-row-reverse" : "max-w-[96%]"
+              )}
+            >
+              <div className={cn(
+                "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border shadow-sm",
+                msg.role === "ai"
+                  ? "border-teal/10 bg-teal/10 text-teal"
+                  : "border-charcoal bg-charcoal text-cream"
+              )}>
+                {msg.role === "ai" ? <Bot className="h-4 w-4" strokeWidth={1.7} /> : <User className="h-4 w-4" strokeWidth={1.7} />}
+              </div>
+
+              <div className={cn("min-w-0", msg.role === "user" ? "items-end" : "items-start")}>
+                <div className={cn(
+                  "relative text-[14px] leading-7 whitespace-pre-wrap",
+                  msg.role === "user"
+                    ? "rounded-[20px] rounded-tr-md bg-charcoal px-4.5 py-3 text-cream shadow-[0_10px_25px_rgba(23,23,22,0.12)]"
+                    : "rounded-[20px] rounded-tl-md border border-border/60 bg-white/70 px-4.5 py-3.5 text-charcoal shadow-[0_8px_25px_rgba(23,23,22,0.04)] backdrop-blur-sm"
+                )}>
+                  {msg.content}
+                </div>
+
+                {msg.role === "ai" && msg.id !== "welcome" && (
+                  <button
+                    type="button"
+                    onClick={() => copyAnswer(msg)}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-medium text-charcoal-light/60 opacity-0 transition-all hover:bg-white hover:text-charcoal group-hover:opacity-100"
+                  >
+                    {copiedId === msg.id ? <Check className="h-3 w-3 text-teal" /> : <Copy className="h-3 w-3" />}
+                    {copiedId === msg.id ? "Copied" : "Copy"}
+                  </button>
+                )}
+
+                {msg.sources && msg.sources.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {msg.sources.map((source, i) => {
+                      const label = source.pageNumber ? `Page ${source.pageNumber}` : `Chunk ${source.chunkIndex}`;
+                      const isClickable = !!source.pageNumber && !!onNavigateToPage;
+                      return (
+                        <button
+                          key={`${source.chunkIndex}-${i}`}
+                          type="button"
+                          onClick={() => isClickable && onNavigateToPage!(source.pageNumber!)}
+                          disabled={!isClickable}
+                          className={cn(
+                            "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-semibold shadow-sm transition-all",
+                            isClickable
+                              ? "border-teal/15 bg-teal/5 text-forest hover:-translate-y-0.5 hover:border-teal/30 hover:bg-teal/10"
+                              : "cursor-default border-border/60 bg-white/50 text-charcoal-light"
+                          )}
+                          title={isClickable ? `Go to page ${source.pageNumber}` : `Similarity score: ${(source.score * 100).toFixed(1)}%`}
+                        >
+                          <FileText className="h-3 w-3 text-teal" />
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+
+          {chatMutation.isPending && (
+            <div className="flex max-w-[96%] gap-3.5 animate-askpdf-fade-up">
+              <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-teal/10 bg-teal/10 text-teal">
+                <Bot className="h-4 w-4" />
+              </div>
+              <div className="rounded-[20px] rounded-tl-md border border-border/60 bg-white/70 px-5 py-4 shadow-sm backdrop-blur-sm">
+                <div className="flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal/70 [animation-delay:-0.3s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal/70 [animation-delay:-0.15s]" />
+                  <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-teal/70" />
+                  <span className="ml-2 text-[10px] font-medium uppercase tracking-[0.12em] text-charcoal-light/60">Thinking</span>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
-      {/* Input Area */}
-      <div className="p-4 md:px-8 md:pb-6 bg-cream shrink-0">
-        <form 
-          onSubmit={handleSubmit}
-          className="relative flex items-end gap-2 max-w-2xl mx-auto"
-        >
-          <div className="relative flex-1 bg-white/80 backdrop-blur-sm border border-border/80 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-teal/30 focus-within:border-teal transition-all shadow-sm">
+      <div className="shrink-0 border-t border-border/50 bg-cream/90 px-4 pb-4 pt-3 backdrop-blur-xl md:px-7 md:pb-6">
+        <form onSubmit={handleSubmit} className="mx-auto max-w-2xl">
+          <div className="group relative rounded-[22px] border border-border/80 bg-white/85 p-1.5 shadow-[0_12px_40px_rgba(23,23,22,0.07)] backdrop-blur-md transition-all focus-within:border-teal/30 focus-within:shadow-[0_16px_50px_rgba(42,96,91,0.10)]">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Ask a question about the document..."
-              className="w-full max-h-48 min-h-[60px] py-4 pl-5 pr-14 bg-transparent text-[15px] font-light text-charcoal placeholder:text-charcoal-light/60 resize-none outline-none leading-relaxed"
+              placeholder="Ask anything about this document…"
+              className="max-h-36 min-h-[58px] w-full resize-none bg-transparent px-4 py-3.5 pr-14 text-[14px] leading-6 text-charcoal outline-none placeholder:text-charcoal-light/45"
               rows={1}
               disabled={chatMutation.isPending}
             />
             <button
               type="submit"
               disabled={!input.trim() || chatMutation.isPending}
-              className="absolute right-2 bottom-2 w-10 h-10 flex items-center justify-center text-cream bg-charcoal hover:bg-forest disabled:bg-black/5 disabled:text-charcoal-light/40 rounded-xl transition-all shadow-sm"
+              className="absolute bottom-2.5 right-2.5 flex h-10 w-10 items-center justify-center rounded-[14px] bg-charcoal text-cream shadow-md transition-all hover:-translate-y-0.5 hover:bg-forest disabled:cursor-not-allowed disabled:bg-cream-dark disabled:text-charcoal-light/35"
+              aria-label="Send question"
             >
-              {chatMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
+              {chatMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </button>
           </div>
         </form>
-        <div className="text-center mt-3">
-          <p className="text-[11px] font-light text-charcoal-light/70 tracking-wide">AI may produce inaccurate information. Please verify important facts.</p>
+        <div className="mt-2 flex items-center justify-center gap-1.5 text-[9px] font-medium text-charcoal-light/50">
+          <CornerDownLeft className="h-3 w-3" /> Enter to send · Shift + Enter for a new line · AI can make mistakes
         </div>
       </div>
     </div>
