@@ -13,10 +13,17 @@ export default function Home() {
 
   return (
     <div className="flex-1 w-full flex flex-col relative bg-cream">
+      {/* Background Video Section */}
       <div className={`relative flex flex-col items-center justify-center w-full px-6 transition-all duration-700 ease-in-out ${hasDocuments ? "py-24" : "flex-1 min-h-[calc(100vh-4rem)]"}`}>
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none bg-cream">
           <div className="absolute inset-0 bg-cream/50 z-10" />
-          <video autoPlay loop muted playsInline className="w-full h-full object-cover object-center opacity-40 mix-blend-multiply">
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover object-center opacity-40 mix-blend-multiply"
+          >
             <source src="/videos/askpdf-hero.mp4" type="video/mp4" />
           </video>
         </div>
