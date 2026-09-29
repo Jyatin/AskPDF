@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, Loader2, AlertCircle, Sparkles, PanelRight } from "lucide-react";
+import { ChevronLeft, Loader2, AlertCircle } from "lucide-react";
 import PdfViewer from "../components/workspace/pdf/PdfViewer";
 import ChatPanel from "../components/workspace/chat/ChatPanel";
 import { getDocument, type LocalDocument } from "../lib/storage";
@@ -33,81 +33,48 @@ export default function Workspace() {
 
   if (loading) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center bg-cream">
-        <div className="animate-askpdf-pulse-ring mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-charcoal text-cream">
-          <Loader2 className="h-5 w-5 animate-spin" />
-        </div>
-        <p className="text-sm font-medium text-charcoal">Opening your workspace</p>
-        <p className="mt-1 text-xs text-charcoal-light">Loading the document locally…</p>
+      <div className="flex-1 flex flex-col items-center justify-center bg-cream text-charcoal">
+        <Loader2 className="w-8 h-8 animate-spin text-teal mb-4" />
+        <p className="font-light">Loading workspace...</p>
       </div>
     );
   }
 
   if (!document) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center bg-cream px-6 text-center">
-        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 text-red-500 ring-1 ring-red-100">
-          <AlertCircle className="h-6 w-6" strokeWidth={1.6} />
-        </div>
-        <h2 className="font-serif text-3xl tracking-tight text-charcoal">Document not found</h2>
-        <p className="mt-3 max-w-md text-sm leading-6 text-charcoal-light">
-          This document is not available in your local browser storage. It may have been cleared or uploaded on another device.
+      <div className="flex-1 flex flex-col items-center justify-center bg-cream text-charcoal">
+        <AlertCircle className="w-10 h-10 mb-4 text-red-500 stroke-[1.5]" />
+        <h2 className="text-xl font-serif text-charcoal mb-2">Document not found</h2>
+        <p className="text-sm font-light mb-6 max-w-md text-center text-charcoal-light">
+          This document could not be found in your local browser storage. It may have been cleared or uploaded on another device.
         </p>
-        <Link to="/" className="mt-7 rounded-full bg-charcoal px-5 py-2.5 text-sm font-semibold text-cream shadow-lg transition hover:bg-forest">
-          Back to library
+        <Link to="/" className="px-6 py-2.5 text-sm font-medium text-cream bg-charcoal hover:bg-forest rounded-full transition-colors shadow-sm">
+          Back to Library
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-hidden bg-[#EEECE5]">
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-border/70 bg-cream/90 px-3 backdrop-blur-xl md:px-5">
-        <div className="flex min-w-0 items-center gap-2">
-          <Link to="/" className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-charcoal-light transition hover:bg-white hover:text-charcoal">
-            <ChevronLeft className="h-4 w-4" />
-          </Link>
-          <div className="hidden h-5 w-px bg-border sm:block" />
-          <div className="min-w-0">
-            <p className="truncate text-[12px] font-semibold text-charcoal">{document.originalName}</p>
-            <p className="hidden text-[9px] font-medium uppercase tracking-[0.15em] text-charcoal-light/60 sm:block">Document workspace</p>
-          </div>
+    <div className="flex-1 flex flex-col md:flex-row h-[calc(100vh-4rem)] overflow-hidden bg-cream">
+      <div className="md:hidden flex items-center px-4 h-14 border-b border-border/60 bg-cream shrink-0">
+        <Link to="/" className="text-charcoal-light hover:text-charcoal mr-3 transition-colors"><ChevronLeft className="w-5 h-5" /></Link>
+        <h1 className="text-sm font-medium text-charcoal truncate">{document.originalName}</h1>
+      </div>
+
+      <div className="flex-1 md:w-1/2 md:border-r border-border/60 flex flex-col min-h-0 relative">
+        <div className="hidden md:flex items-center px-6 h-14 border-b border-border/60 bg-cream/90 backdrop-blur-sm shrink-0 absolute top-0 left-0 right-0 z-10">
+          <Link to="/" className="text-charcoal-light hover:text-charcoal mr-3 transition-colors"><ChevronLeft className="w-4 h-4" /></Link>
+          <h1 className="text-[13px] font-medium text-charcoal truncate">{document.originalName}</h1>
         </div>
-        <div className="hidden items-center gap-2 rounded-full border border-teal/15 bg-teal/5 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-teal sm:flex">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-teal" />
-          AI ready
+        <div className="flex-1 md:pt-14 min-h-0 flex flex-col bg-cream-dark">
+          <PdfViewer file={document.file} goToPage={pdfTargetPage} />
         </div>
       </div>
 
-      <div className="flex min-h-0 flex-1 flex-col md:flex-row">
-        <div className="relative flex min-h-0 flex-1 flex-col border-b border-border/70 md:w-1/2 md:border-b-0 md:border-r">
-          <div className="absolute left-4 top-3 z-20 hidden items-center gap-2 rounded-full border border-white/80 bg-white/75 px-2.5 py-1.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-charcoal-light shadow-sm backdrop-blur-md lg:flex">
-            <FileBadge />
-            Document
-          </div>
-          <PdfViewer file={document.file} goToPage={pdfTargetPage} />
-        </div>
-
-        <div className="relative flex min-h-0 flex-1 flex-col bg-cream md:w-1/2">
-          <div className="flex h-11 shrink-0 items-center justify-between border-b border-border/60 bg-cream/90 px-4 backdrop-blur-xl md:px-6">
-            <div className="flex items-center gap-2">
-              <div className="flex h-6 w-6 items-center justify-center rounded-lg bg-charcoal text-cream">
-                <Sparkles className="h-3 w-3" />
-              </div>
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-charcoal">AskPDF AI</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[9px] font-medium text-charcoal-light/60">
-              <PanelRight className="h-3.5 w-3.5" />
-              Grounded chat
-            </div>
-          </div>
-          <ChatPanel documentId={document.documentId} onNavigateToPage={handleNavigateToPage} />
-        </div>
+      <div className="flex-1 md:w-1/2 flex flex-col min-h-0 bg-cream">
+        <ChatPanel documentId={document.documentId} onNavigateToPage={handleNavigateToPage} />
       </div>
     </div>
   );
-}
-
-function FileBadge() {
-  return <span className="h-2 w-2 rounded-[2px] bg-teal" />;
 }
