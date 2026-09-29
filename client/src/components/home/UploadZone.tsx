@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { UploadCloud, AlertCircle, Loader2 } from "lucide-react";
+import { UploadCloud, AlertCircle, Loader2, FileUp, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { uploadDocumentApi } from "../../lib/api";
@@ -14,7 +14,6 @@ export default function UploadZone() {
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
       const response = await uploadDocumentApi(file);
-      // Save to local IndexedDB
       await saveDocument({
         documentId: response.document.id,
         originalName: response.document.originalName,
@@ -56,77 +55,100 @@ export default function UploadZone() {
   const onDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFile(e.dataTransfer.files[0]);
-    }
+    if (e.dataTransfer.files?.length) handleFile(e.dataTransfer.files[0]);
+  };
+
+  const openPicker = () => {
+    if (!uploadMutation.isPending) fileInputRef.current?.click();
   };
 
   return (
     <div className="w-full">
       <div
         className={cn(
-          "relative flex flex-col items-center justify-center p-10 md:p-14 border rounded-2xl transition-all duration-300 ease-out cursor-pointer overflow-hidden",
-          isDragging 
-            ? "border-teal bg-teal/5 ring-4 ring-teal/10 scale-[1.02]" 
-            : "border-border/80 bg-white/60 backdrop-blur-md shadow-sm hover:shadow-md hover:border-teal/30 hover:bg-white/90",
-          uploadMutation.isPending && "opacity-70 pointer-events-none scale-100"
+          "group relative overflow-hidden rounded-[28px] border p-1 transition-all duration-500",
+          isDragging
+            ? "scale-[1.01] border-teal/50 bg-teal/5 shadow-[0_24px_70px_rgba(42,96,91,0.15)]"
+            : "border-border/80 bg-white/45 shadow-[0_24px_80px_rgba(23,23,22,0.08)] hover:-translate-y-1 hover:border-teal/25 hover:shadow-[0_30px_90px_rgba(23,23,22,0.12)]",
+          uploadMutation.isPending && "pointer-events-none"
         )}
-        onClick={() => !uploadMutation.isPending && fileInputRef.current?.click()}
+        onClick={openPicker}
         onDragOver={onDragOver}
         onDragLeave={onDragLeave}
         onDrop={onDrop}
       >
-        <input
-          type="file"
-          ref={fileInputRef}
-          className="hidden"
-          accept="application/pdf"
-          onChange={(e) => {
-            if (e.target.files && e.target.files.length > 0) {
-              handleFile(e.target.files[0]);
-            }
-          }}
-        />
+        <div className="relative overflow-hidden rounded-[23px] border border-white/80 bg-white/70 px-6 py-8 backdrop-blur-xl md:px-10 md:py-10">
+          <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-teal/10 blur-3xl transition-transform duration-700 group-hover:scale-125" />
+          <div className="pointer-events-none absolute -bottom-20 -left-10 h-40 w-40 rounded-full bg-yellow/10 blur-3xl" />
 
-        {uploadMutation.isPending ? (
-          <div className="flex flex-col items-center text-charcoal">
-            <Loader2 className="w-8 h-8 mb-4 animate-spin text-teal" />
-            <p className="text-sm font-medium">Processing document...</p>
-            <p className="text-xs text-charcoal-light mt-1 font-light">Extracting text and generating embeddings</p>
-          </div>
-        ) : uploadMutation.isError ? (
-          <div className="flex flex-col items-center text-red-600">
-            <AlertCircle className="w-8 h-8 mb-4 text-red-500 stroke-[1.5]" />
-            <p className="text-sm font-medium">Upload failed</p>
-            <p className="text-xs text-red-500/80 mt-1">{uploadMutation.error?.message || "An unexpected error occurred."}</p>
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                uploadMutation.reset();
-              }}
-              className="mt-5 text-xs font-medium bg-red-50 text-red-600 px-4 py-2 rounded-full hover:bg-red-100 transition-colors"
-            >
-              Try again
-            </button>
-          </div>
-        ) : (
-          <div className="flex flex-col items-center text-charcoal">
-            <div className="w-12 h-12 mb-5 rounded-full bg-cream-dark border border-border/50 flex items-center justify-center shadow-sm">
-              <UploadCloud className="w-5 h-5 text-charcoal-light stroke-[1.5]" />
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="application/pdf"
+            onChange={(e) => {
+              if (e.target.files?.length) handleFile(e.target.files[0]);
+              e.currentTarget.value = "";
+            }}
+          />
+
+          {uploadMutation.isPending ? (
+            <div className="relative flex min-h-[180px] flex-col items-center justify-center text-charcoal">
+              <div className="animate-askpdf-pulse-ring mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-charcoal text-cream shadow-lg">
+                <Loader2 className="h-6 w-6 animate-spin" />
+              </div>
+              <p className="text-sm font-semibold">Preparing your document</p>
+              <p className="mt-2 text-xs text-charcoal-light">Uploading securely · this may take a moment</p>
+              <div className="mt-5 h-1.5 w-48 overflow-hidden rounded-full bg-cream-dark">
+                <div className="askpdf-shimmer h-full w-full rounded-full" />
+              </div>
             </div>
-            <p className="text-[15px] font-medium text-charcoal mb-1">Click to browse or drag PDF here</p>
-            <p className="text-xs text-charcoal-light mb-6 font-light">Maximum file size 20 MB</p>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                fileInputRef.current?.click();
-              }}
-              className="px-6 py-2.5 text-sm font-medium text-cream bg-charcoal hover:bg-forest rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-forest focus:ring-offset-2 focus:ring-offset-cream shadow-sm"
-            >
-              Select Document
-            </button>
-          </div>
-        )}
+          ) : uploadMutation.isError ? (
+            <div className="relative flex min-h-[180px] flex-col items-center justify-center text-red-600">
+              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 ring-1 ring-red-100">
+                <AlertCircle className="h-6 w-6" />
+              </div>
+              <p className="text-sm font-semibold">We couldn't upload that PDF</p>
+              <p className="mt-2 max-w-sm text-center text-xs leading-5 text-red-500/80">{uploadMutation.error?.message || "An unexpected error occurred. Please try again."}</p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  uploadMutation.reset();
+                }}
+                className="mt-5 rounded-full bg-red-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-red-700"
+              >
+                Try again
+              </button>
+            </div>
+          ) : (
+            <div className="relative flex min-h-[180px] flex-col items-center justify-center text-charcoal">
+              <div className="relative mb-5">
+                <div className="absolute inset-0 rounded-2xl bg-teal/10 blur-xl transition-all duration-500 group-hover:scale-125" />
+                <div className="relative flex h-14 w-14 items-center justify-center rounded-2xl bg-charcoal text-cream shadow-[0_14px_30px_rgba(23,23,22,0.16)] transition-transform duration-500 group-hover:-translate-y-1 group-hover:rotate-2">
+                  <FileUp className="h-6 w-6" strokeWidth={1.7} />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-base font-semibold tracking-tight">Drop your PDF here</p>
+                <Sparkles className="h-3.5 w-3.5 text-teal" />
+              </div>
+              <p className="mt-2 text-sm text-charcoal-light">or choose a file from your device</p>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openPicker();
+                }}
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-charcoal px-5 py-2.5 text-sm font-semibold text-cream shadow-lg shadow-charcoal/10 transition-all hover:-translate-y-0.5 hover:bg-forest hover:shadow-xl"
+              >
+                <UploadCloud className="h-4 w-4" />
+                Select PDF
+              </button>
+              <div className="mt-5 flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-charcoal-light/60">
+                <span>PDF only</span><span className="h-1 w-1 rounded-full bg-border" /><span>20 MB max</span>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
