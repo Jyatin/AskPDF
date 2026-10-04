@@ -2,140 +2,244 @@
 
 # 📄 AskPDF
 
-### Chat with your PDFs. Get grounded answers. Jump straight to the source.
+### **Conversational Document Intelligence with RAG**
 
-An AI-powered document intelligence application that combines **RAG, semantic retrieval, Gemini, and page-aware citations** to turn static PDFs into interactive, conversational knowledge.
+**Upload a PDF → ask questions → retrieve grounded context → jump directly to the source page.**
 
-<br/>
+<p>
+  <a href="https://ask-pdf-vert.vercel.app/"><strong>🚀 Live Demo</strong></a>
+  ·
+  <a href="https://github.com/Jyatin/AskPDF"><strong>📦 Repository</strong></a>
+</p>
 
-<a href="https://ask-pdf-vert.vercel.app/">
-  <img src="https://img.shields.io/badge/🚀%20Live%20Demo-ask--pdf--vert.vercel.app-111827?style=for-the-badge" alt="Live Demo" />
-</a>
-<a href="https://github.com/Jyatin/AskPDF">
-  <img src="https://img.shields.io/badge/GitHub-Repository-181717?style=for-the-badge&logo=github" alt="GitHub" />
-</a>
-
-<br/><br/>
-
-<img src="https://img.shields.io/badge/React-20232A?style=flat-square&logo=react&logoColor=61DAFB" />
-<img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" />
-<img src="https://img.shields.io/badge/Node.js-339933?style=flat-square&logo=node.js&logoColor=white" />
-<img src="https://img.shields.io/badge/Express-000000?style=flat-square&logo=express&logoColor=white" />
-<img src="https://img.shields.io/badge/MongoDB-47A248?style=flat-square&logo=mongodb&logoColor=white" />
-<img src="https://img.shields.io/badge/Gemini-4285F4?style=flat-square&logo=google&logoColor=white" />
-<img src="https://img.shields.io/badge/RAG-AI-7C3AED?style=flat-square" />
+<p>
+  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black">
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white">
+  <img src="https://img.shields.io/badge/Vite-Frontend-646CFF?style=flat-square&logo=vite&logoColor=white">
+  <img src="https://img.shields.io/badge/Node.js-Backend-339933?style=flat-square&logo=node.js&logoColor=white">
+  <img src="https://img.shields.io/badge/Express.js-API-000000?style=flat-square&logo=express&logoColor=white">
+  <img src="https://img.shields.io/badge/MongoDB-Database-47A248?style=flat-square&logo=mongodb&logoColor=white">
+  <img src="https://img.shields.io/badge/Gemini-LLM%20%2B%20Embeddings-4285F4?style=flat-square&logo=google&logoColor=white">
+  <img src="https://img.shields.io/badge/RAG-Retrieval%20Augmented%20Generation-7C3AED?style=flat-square">
+</p>
 
 </div>
 
 ---
 
-## ✨ What is AskPDF?
+## Overview
 
-**AskPDF** turns a PDF from a file you read into a document you can **talk to**.
+**AskPDF** is a full-stack Retrieval-Augmented Generation (RAG) application that turns PDF documents into conversational knowledge sources.
 
-Upload a document, ask a question in natural language, and AskPDF retrieves the most relevant context before asking Gemini to generate a grounded answer. When the answer comes from a specific part of the document, the application can surface the **page reference directly in the conversation** and let you jump to that page in the PDF viewer.
+Instead of generating an answer from an LLM's general knowledge, AskPDF processes the uploaded document, retrieves relevant passages, provides that context to Gemini, and surfaces the source page alongside the response.
 
-The project combines:
+The core product idea is simple:
 
-- 📄 PDF text extraction
-- 🧩 document chunking
-- 🔎 embedding-based semantic retrieval
-- 🧠 Retrieval-Augmented Generation (RAG)
-- 📑 page-aware retrieval
-- 🎯 source/page citations
-- 🔗 clickable citation navigation
-- 💬 conversational follow-up questions
+> **Answer the question — and show where the answer came from.**
 
-The current implementation uses a React + TypeScript frontend and a Node.js + Express + TypeScript backend, with MongoDB for persistence and Gemini for AI capabilities. fileciteturn13file0L42-L64
-
----
-
-## 🎥 Live Demo
-
-<div align="center">
-
-### 👉 [Open AskPDF](https://ask-pdf-vert.vercel.app/)
-
-**Upload a PDF → ask a question → inspect the source.**
-
-</div>
-
----
-
-## 🌟 Why AskPDF?
-
-Most document chat applications stop at:
-
-> “Here is an answer generated from your PDF.”
-
-AskPDF is designed around a more useful workflow:
-
-> **“Here is the answer — and here is where it came from.”**
-
-That means the system is not only focused on answering questions, but also on making those answers easier to **verify, navigate, and trust**.
-
----
-
-# 🚀 Features
-
-<details open>
-<summary><strong>📄 Document Intelligence</strong></summary>
-
-<br/>
+### Core capabilities
 
 - PDF upload and text extraction
-- Page offset calculation
-- Automatic document chunking
-- Temporary file cleanup after processing
-- Support for document-grounded conversational queries
+- Page-aware document processing
+- Document chunking
+- Gemini-powered embeddings
+- Semantic retrieval using cosine similarity
+- Page-aware retrieval for page-specific questions
+- Retrieval-Augmented Generation
+- Grounded answers based on retrieved document context
+- Source/page citations
+- Clickable citation navigation back to the PDF
+- Conversational follow-up questions
+- MongoDB-backed document/chat persistence
+- Gemini API error and rate-limit handling
 
-</details>
+---
 
-<details>
-<summary><strong>🔍 Semantic Retrieval</strong></summary>
+## Why it is different from a basic "Chat with PDF" project
 
-<br/>
+Many document-chat applications stop after generating an answer from a PDF.
 
-- Embedding-based retrieval
+AskPDF adds a **verification-oriented retrieval experience**: responses can expose the relevant source page and allow the user to navigate directly to that location in the document viewer.
+
+That makes the retrieval pipeline visible to the user rather than treating the LLM response as a black box.
+
+---
+
+## 🧠 RAG Pipeline
+
+```text
+┌─────────────────────┐
+│      Upload PDF     │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Extract Text +      │
+│ Page Information    │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Chunk Document      │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Generate Embeddings │
+│      via Gemini     │
+└──────────┬──────────┘
+           ↓
+      User Question
+           │
+     ┌─────┴─────┐
+     ↓           ↓
+Semantic       Page-aware
+Retrieval      Retrieval
+     │           │
+     └─────┬─────┘
+           ↓
+┌─────────────────────┐
+│ Rank / Select       │
+│ Relevant Context    │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Gemini Generation   │
+│ with Retrieved      │
+│ Document Context    │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Grounded Answer +   │
+│ Source Page         │
+└──────────┬──────────┘
+           ↓
+┌─────────────────────┐
+│ Click Citation →    │
+│ Jump to PDF Page    │
+└─────────────────────┘
+```
+
+### Retrieval flow
+
+1. Extract text while retaining page information.
+2. Split the document into retrievable chunks.
+3. Generate embeddings for the document content.
+4. Embed the user's question.
+5. Rank candidate chunks using cosine similarity.
+6. Apply page-aware retrieval when the question targets a specific page.
+7. Inject the most relevant context into the Gemini generation request.
+8. Return the answer together with source/page information.
+9. Allow the user to navigate directly to the cited page.
+
+---
+
+## 🏗️ Architecture
+
+```text
+                         ASKPDF
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+              ▼                         ▼
+      React + TypeScript         Node + Express + TypeScript
+           Vite                         │
+      Tailwind CSS                     │
+      TanStack Query                   ▼
+      Axios                    ┌────────────────────┐
+              │                 │ Application Layer  │
+              │                 │ Routes/Controllers │
+              │                 └─────────┬──────────┘
+              │                           │
+              │                           ▼
+              │                 ┌────────────────────┐
+              │                 │ RAG / PDF / Chat   │
+              │                 │ Services           │
+              │                 └──────┬──────┬──────┘
+              │                        │      │
+              │                        ▼      ▼
+              │                    Gemini   pdf-parse
+              │
+              └──────────── HTTP API ───────────────┐
+                                                     ▼
+                                                MongoDB
+```
+
+### Frontend
+
+- React + TypeScript
+- Vite
+- Tailwind CSS
+- TanStack Query
+- Axios
+- PDF viewer and citation navigation
+- Conversational chat interface
+
+### Backend
+
+- Node.js
+- Express
+- TypeScript
+- REST API
+- RAG/PDF/chat services
+- MongoDB + Mongoose
+- Gemini API integration
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technology | Role |
+|---|---|---|
+| Frontend | React + TypeScript | Document and chat UI |
+| Build | Vite | Frontend development/build |
+| Styling | Tailwind CSS | UI system |
+| Server State | TanStack Query | API/server-state management |
+| HTTP | Axios | Client-server communication |
+| Backend | Node.js + Express | REST API and application server |
+| Database | MongoDB + Mongoose | Persistence |
+| AI | Gemini API | Embeddings + answer generation |
+| Retrieval | Cosine similarity | Semantic ranking |
+| PDF | pdf-parse | Document extraction |
+| Deployment | Vercel + Render | Cloud deployment |
+| Database Hosting | MongoDB Atlas | Managed database |
+
+---
+
+## ✨ Key Features
+
+### 📄 Document Processing
+
+- PDF upload
+- Text extraction
+- Page-offset tracking
+- Automatic chunking
+- Temporary upload cleanup
+
+### 🔎 Semantic Retrieval
+
+- Embedding-based search
 - Cosine-similarity ranking
-- Meaning-aware search instead of simple keyword matching
-- Relevant context selection before generation
+- Meaning-aware retrieval rather than keyword-only matching
+- Relevant-context selection before LLM generation
 
-</details>
+### 📑 Page-Aware Retrieval
 
-<details>
-<summary><strong>📑 Page-Aware Retrieval</strong></summary>
-
-<br/>
-
-Ask questions such as:
+Questions such as:
 
 ```text
 What is mentioned on page 20?
 ```
 
-AskPDF can use the requested page context instead of treating the entire document as an undifferentiated text corpus.
+can be handled using page-specific context rather than treating the document as one undifferentiated text corpus.
 
-</details>
+### 🎯 Grounded Answers
 
-<details>
-<summary><strong>🎯 Grounded Answers & Citations</strong></summary>
+- Responses are generated from retrieved document context
+- Source pages can be surfaced with responses
+- Citations can be clicked to navigate to the corresponding PDF page
+- Designed to make generated answers easier to inspect and verify
 
-<br/>
+### 💬 Conversational Interaction
 
-- Answers are generated from retrieved document context
-- Source pages are surfaced with responses
-- Citations can be clicked to navigate to the relevant PDF page
-- Designed to make answers easier to fact-check
-
-</details>
-
-<details>
-<summary><strong>💬 Conversational UX</strong></summary>
-
-<br/>
-
-Ask follow-up questions naturally:
+The interface supports follow-up questions such as:
 
 ```text
 What is the main argument?
@@ -145,220 +249,133 @@ Can you explain that in simpler terms?
 What evidence supports that?
 ```
 
-The application is designed to preserve the conversational context needed for follow-up interactions.
+---
 
-</details>
+## 🎨 Product UI
 
-<details>
-<summary><strong>🛡️ Reliability & Production Considerations</strong></summary>
+AskPDF is designed as a complete document-reading and conversational experience rather than only an API demo.
 
-<br/>
+The interface includes:
 
-- Gemini API error/rate-limit handling
-- Required environment-variable validation
+- PDF document viewer
+- Chat interface
+- Citation/source navigation
+- Upload workflow
+- Loading and error states
+- Conversational follow-ups
+- Responsive layouts
+
+---
+
+## 🧪 Testing & Reliability
+
+The current repository does **not** claim a formal automated unit/integration test suite. Instead, it includes a Postman API collection for manual API verification and documents the reliability safeguards implemented in the application.
+
+### Manual/API verification
+
+`AskPDF.postman_collection.json` is included for API testing.
+
+### Reliability considerations
+
+- Gemini API error handling
+- Gemini rate-limit handling
+- Environment-variable validation
 - CORS configuration
 - Temporary upload cleanup
 - Production frontend/backend deployment
 
-</details>
+> This README intentionally does not claim a test count or coverage percentage that is not currently represented by an automated test suite.
 
 ---
 
-# 🧠 How AskPDF Works
-
-AskPDF follows a **Retrieval-Augmented Generation (RAG)** pipeline with additional page-aware logic.
+## ☁️ Deployment
 
 ```text
-                         ┌─────────────────────┐
-                         │     Upload PDF      │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   Extract Text      │
-                         │ + Page Information  │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   Chunk Document    │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │ Generate Embeddings │
-                         │      via Gemini     │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   User Question     │
-                         └──────────┬──────────┘
-                                    │
-                         ┌──────────┴──────────┐
-                         ▼                     ▼
-                Semantic Retrieval      Page Retrieval
-                         │                     │
-                         └──────────┬──────────┘
-                                    ▼
-                         ┌─────────────────────┐
-                         │ Relevant Context    │
-                         │   Selected/Ranked   │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │   Gemini Generation │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │ Grounded Answer +   │
-                         │ Page Citations      │
-                         └──────────┬──────────┘
-                                    │
-                                    ▼
-                         ┌─────────────────────┐
-                         │ Click Citation →    │
-                         │ Jump to PDF Page    │
-                         └─────────────────────┘
+Frontend       → Vercel
+Backend        → Render
+Database       → MongoDB Atlas
+AI             → Gemini API
 ```
 
-The repository describes this flow as text extraction with page offsets, chunking, embedding generation, semantic or page-aware retrieval, context injection, grounded Gemini generation, and clickable PDF navigation. fileciteturn13file0L107-L131
+### Live application
+
+**https://ask-pdf-vert.vercel.app/**
+
+### Backend
+
+`https://askpdf-backend-xt83.onrender.com`
+
+### Health check
+
+`https://askpdf-backend-xt83.onrender.com/health`
 
 ---
 
-# 🏗️ Architecture
-
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│                         ASKPDF PLATFORM                         │
-├──────────────────────────────┬──────────────────────────────────┤
-│          FRONTEND            │             BACKEND               │
-│                              │                                  │
-│  React + TypeScript          │  Node.js + Express + TypeScript │
-│  Vite                        │                                  │
-│  Tailwind CSS                │  ┌────────────────────────────┐  │
-│  TanStack Query              │  │ Controllers / Routes       │  │
-│  Axios                       │  └─────────────┬──────────────┘  │
-│                              │                │                  │
-│  PDF Viewer                  │                ▼                  │
-│  Chat Interface              │  ┌────────────────────────────┐  │
-│  Citation Navigation         │  │ RAG / PDF / Chat Services │  │
-│                              │  └─────────────┬──────────────┘  │
-└──────────────┬───────────────┘                │                 │
-               │                                │                 │
-               └────────────── HTTP ────────────┘                 │
-                                                │                 │
-                         ┌──────────────────────┼───────────────┐ │
-                         │                      │               │ │
-                         ▼                      ▼               ▼ │
-                    MongoDB                 Gemini          pdf-parse
-                         │                      │               │ │
-                         └──────────────────────┴───────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
-```
-
-The repository is organized around a React/Vite client and a Node/Express server with configuration, controllers, middleware, models, routes, services, utilities, and workers. fileciteturn13file0L139-L164
-
----
-
-# 🛠️ Tech Stack
-
-| Layer | Technology | Purpose |
-|---|---|---|
-| Frontend | React | Interactive document/chat UI |
-| Language | TypeScript | Type-safe application code |
-| Build Tool | Vite | Fast frontend development/builds |
-| Styling | Tailwind CSS | UI styling |
-| Data Fetching | TanStack Query | Server-state management |
-| HTTP | Axios | API communication |
-| Backend | Node.js + Express | API and application server |
-| Database | MongoDB + Mongoose | Persistence |
-| AI | Gemini API | Embeddings and generation |
-| PDF | pdf-parse | PDF text extraction |
-| Deployment | Vercel + Render | Frontend/backend hosting |
-| Database Hosting | MongoDB Atlas | Managed MongoDB |
-
-This stack reflects the repository's documented frontend, backend, AI/RAG, and deployment technologies. fileciteturn13file0L69-L103
-
----
-
-# 📁 Project Structure
+## 📁 Project Structure
 
 ```text
 AskPDF/
-│
-├── client/                         # React + Vite frontend
-│   ├── public/                     # Static assets
+├── client/
+│   ├── public/
 │   └── src/
-│       ├── assets/                 # Images and global styles
-│       ├── components/             # Reusable UI components
-│       ├── lib/                    # Utilities and API clients
-│       └── pages/                  # Main views/routes
+│       ├── assets/
+│       ├── components/
+│       ├── lib/
+│       └── pages/
 │
-├── server/                         # Node + Express backend
+├── server/
 │   ├── src/
-│   │   ├── config/                 # Configuration/database setup
-│   │   ├── constants/              # Shared constants
-│   │   ├── controllers/            # Request handlers
-│   │   ├── middleware/             # Express middleware
-│   │   ├── models/                 # Mongoose models
-│   │   ├── routes/                 # API routes
-│   │   ├── services/               # RAG, chat, PDF logic
-│   │   ├── utils/                  # Helper utilities
-│   │   └── workers/                # Background processing
-│   └── uploads/                    # Temporary PDF storage
+│   │   ├── config/
+│   │   ├── constants/
+│   │   ├── controllers/
+│   │   ├── middleware/
+│   │   ├── models/
+│   │   ├── routes/
+│   │   ├── services/
+│   │   ├── utils/
+│   │   └── workers/
+│   └── uploads/
 │
-├── AskPDF.postman_collection.json  # API testing collection
-├── DEVELOPMENT.md                  # Development notes/log
-└── README.md                       # Project documentation
+├── AskPDF.postman_collection.json
+├── DEVELOPMENT.md
+└── README.md
 ```
-
-The repository also includes a Postman collection for manual API testing. fileciteturn13file0L24-L26
 
 ---
 
-# 🚀 Getting Started
+## 🚀 Getting Started
 
-## Prerequisites
+### Prerequisites
 
-- **Node.js:** v18+
-- **MongoDB:** local MongoDB or MongoDB Atlas
-- **Gemini API Key**
+- Node.js 18+
+- MongoDB / MongoDB Atlas
+- Gemini API key
 - npm
 
-These prerequisites match the project's documented setup. fileciteturn13file0L173-L183
-
-## 1. Clone
+### Clone
 
 ```bash
 git clone https://github.com/Jyatin/AskPDF.git
 cd AskPDF
 ```
 
-## 2. Backend
+### Backend
 
 ```bash
 cd server
 npm install
-```
-
-Create `server/.env`, then start the backend:
-
-```bash
 npm run dev
 ```
 
-Backend development server:
+Backend:
 
 ```text
 http://localhost:5000
 ```
 
-## 3. Frontend
+### Frontend
 
-Open another terminal:
+In another terminal:
 
 ```bash
 cd client
@@ -366,37 +383,30 @@ npm install
 npm run dev
 ```
 
-Frontend development server:
+Frontend:
 
 ```text
 http://localhost:5173
 ```
 
-The repository documents these backend/frontend development flows and ports. fileciteturn13file0L173-L233
-
 ---
 
-# 🔑 Environment Variables
+## 🔐 Environment Variables
 
 Create `server/.env`:
 
 ```env
-# Required
 MONGO_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/askpdf
 GEMINI_API_KEY=your_gemini_api_key
 PORT=5000
-
-# Required in production
 CORS_ORIGIN=https://ask-pdf-vert.vercel.app
 ```
 
-> 🔒 **Never commit real credentials or API keys to Git.**
-
-The repository currently documents these environment variables, including the production CORS origin. fileciteturn13file0L261-L275
+**Never commit real credentials or API keys.**
 
 ---
 
-# 📦 Production Build
+## 📦 Production Build
 
 ### Backend
 
@@ -412,159 +422,76 @@ cd client
 npm run build
 ```
 
-These production build commands are part of the documented workflow. fileciteturn13file0L235-L257
+---
+
+## ⚠️ Current Engineering Trade-offs
+
+AskPDF is intentionally documented honestly about its current architecture.
+
+### In-memory semantic ranking
+
+Semantic retrieval currently performs cosine-similarity ranking in application memory rather than using a dedicated vector database/index.
+
+**Why this matters:** it keeps the implementation straightforward for the current scale, but it is not the preferred architecture for very large document collections.
+
+### Temporary document storage
+
+Uploaded PDFs currently use temporary backend storage during processing.
+
+### Conversation persistence
+
+Conversation history is currently held in frontend state and is not yet a persistent multi-session conversation system.
+
+These are planned areas for the next iteration rather than claims of functionality that does not currently exist.
 
 ---
 
-# ☁️ Deployment
+## 🗺️ Roadmap
 
-AskPDF is currently documented as deployed using:
+### Completed
 
-```text
-Frontend       → Vercel
-Backend        → Render
-Database       → MongoDB Atlas
-AI             → Gemini API
-```
+- [x] PDF upload and extraction
+- [x] Document chunking
+- [x] Semantic retrieval
+- [x] RAG-based question answering
+- [x] Page-aware retrieval
+- [x] Clickable source/page citations
+- [x] Production deployment
 
-### Production
+### Next iteration
 
-**Frontend**
-
-https://ask-pdf-vert.vercel.app/
-
-**Backend API**
-
-`https://askpdf-backend-xt83.onrender.com`
-
-**Health Check**
-
-`https://askpdf-backend-xt83.onrender.com/health`
-
-The repository documents the Vercel frontend, Render backend, MongoDB Atlas database, and Gemini-based AI deployment. fileciteturn13file0L281-L296
+- [ ] Persistent conversations
+- [ ] Multi-document conversations
+- [ ] Dedicated vector index / vector database
+- [ ] Retrieval evaluation dataset and metrics
+- [ ] Streaming responses
+- [ ] User authentication
+- [ ] Persistent cloud document storage
+- [ ] Background processing for large documents
+- [ ] Improved table/image understanding
 
 ---
 
-# 🧪 Testing
+## Engineering Highlights
 
-AskPDF currently does not have a formal automated test suite.
-
-For API testing and manual verification, the repository includes:
-
-```text
-AskPDF.postman_collection.json
-```
-
-This matches the current project documentation. fileciteturn13file0L300-L304
-
----
-
-# ⚠️ Current Limitations
-
-AskPDF is actively evolving. Current documented limitations include:
-
-- Conversation history is currently stored in frontend React state and is lost after a page reload.
-- Semantic retrieval currently calculates cosine similarity in application memory rather than using a dedicated vector database.
-- Retrieval is not optimized for very large document collections.
-- Uploaded PDFs use temporary backend local storage during processing.
-
-These are explicitly documented in the current project README. fileciteturn13file0L308-L315
+- Built an end-to-end **RAG pipeline** rather than a generic LLM chatbot
+- Implemented **embedding-based semantic retrieval** with cosine-similarity ranking
+- Added **page-aware retrieval** for document-specific questions
+- Implemented **citation-grounded responses** with clickable source navigation
+- Integrated Gemini for both embedding and generation workflows
+- Built separate React/TypeScript frontend and Node/Express/TypeScript backend
+- Deployed the application using Vercel, Render and MongoDB Atlas
+- Documented current scalability trade-offs instead of hiding them
 
 ---
 
-# 🗺️ Roadmap — V2
-
-```text
-[x] PDF upload + extraction
-[x] Document chunking
-[x] Semantic retrieval
-[x] RAG-based QA
-[x] Page-aware retrieval
-[x] Clickable page citations
-[ ] Persistent conversations
-[ ] Multi-document conversations
-[ ] Improved retrieval/ranking
-[ ] Dedicated vector database
-[ ] Streaming responses
-[ ] User authentication
-[ ] Persistent cloud document storage
-[ ] Large-document background processing
-[ ] Advanced table/image understanding
-```
-
-The planned V2 direction currently includes persistent conversations, multi-document support, improved ranking, scalable vector search, streaming responses, authentication, cloud storage, background processing, security improvements, and richer document understanding. fileciteturn13file0L319-L334
-
----
-
-# 🤝 Contributing
-
-Contributions, ideas, bug reports, issues, and pull requests are welcome.
-
-```bash
-git checkout -b feature/your-feature
-
-# make your changes
-
-git add .
-git commit -m "feat: describe your change"
-git push origin feature/your-feature
-```
-
-Then open a Pull Request with:
-
-- what changed
-- why it changed
-- how it was tested
-- screenshots or recordings for UI changes
-
----
-
-# 📌 Project Status
+## Author
 
 <div align="center">
 
-### 🟢 Active Development
+### Jyatin Singh
 
-AskPDF is an evolving project focused on making document interaction more grounded, navigable, and useful through retrieval-augmented AI.
-
-</div>
-
----
-
-# 👨‍💻 Author
-
-<div align="center">
-
-## Jyatin Singh
-
-Full-Stack Developer · AI Builder · Open Source Contributor
-
-[![GitHub](https://img.shields.io/badge/GitHub-Jyatin-181717?style=for-the-badge&logo=github)](https://github.com/Jyatin)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Jyatin%20Singh-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/jyatin-singh-88984831b/)
-[![Email](https://img.shields.io/badge/Email-singhjyatin%40gmail.com-EA4335?style=for-the-badge&logo=gmail&logoColor=white)](mailto:singhjyatin@gmail.com)
+<a href="https://github.com/Jyatin">GitHub</a> ·
+<a href="https://www.linkedin.com/in/jyatinsingh/">LinkedIn</a>
 
 </div>
-
----
-
-# ⭐ Support AskPDF
-
-If AskPDF is useful or interesting, consider giving the repository a ⭐.
-
-It helps the project get discovered and encourages continued development.
-
-<div align="center">
-
-### Upload. Ask. Retrieve. Verify.
-
-**📄 AskPDF**
-
-</div>
-
----
-
-## 📄 License
-
-No license is currently specified in the repository.
-
-Add a `LICENSE` file when you are ready to define how the project may be used, modified, and distributed.
