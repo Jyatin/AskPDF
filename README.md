@@ -474,17 +474,18 @@ These are planned areas for the next iteration rather than claims of functionali
 
 ## Engineering Highlights
 
-- Built an end-to-end **RAG pipeline** rather than a generic LLM chatbot
-- Implemented **embedding-based semantic retrieval** with cosine-similarity ranking
-- Added **page-aware retrieval** for document-specific questions
-- Implemented **citation-grounded responses** with clickable source navigation
-- Integrated Gemini for both embedding and generation workflows
-- Built separate React/TypeScript frontend and Node/Express/TypeScript backend
-- Deployed the application using Vercel, Render and MongoDB Atlas
-- Documented current scalability trade-offs instead of hiding them
+- Built a **5-stage RAG pipeline in Node.js** for PDFs up to **20 MB**, covering text extraction, document chunking, **768-dimensional embeddings**, semantic vector search, and context-grounded response generation.
+- Engineered **Redis BRPOP background workers** with **202 Accepted** asynchronous responses, hash-based job tracking, and stale-job cleanup for reliable document processing.
+- Reduced hallucination risk by enforcing a **>0.7 cosine-similarity threshold** before passing retrieved context to Gemini for generation.
+- Implemented **page-aware retrieval and clickable source citations**, allowing users to inspect the document page behind an answer.
+- Built separate **React/TypeScript frontend** and **Node.js/Express/TypeScript backend** with MongoDB persistence and Gemini API integration.
+- Deployed the frontend and backend using **Vercel and Render**, with **MongoDB Atlas** as the managed database layer.
+
+### Tech Stack
+
+**Node.js · Express · TypeScript · React · MongoDB · Redis · Gemini API · RAG · Embeddings · Vector Search · Vercel · Render**
 
 ---
-
 ## Author
 
 <div align="center">
