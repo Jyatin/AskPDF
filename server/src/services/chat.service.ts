@@ -31,7 +31,7 @@ const detectPageNumber = (question: string): number | null => {
  * "it", "this") that likely refer to a previously discussed page. If so, scans backward
  * through conversation history to find the most recent page-specific user question.
  */
-const resolvePageFromHistory = (
+export const resolvePageFromHistory = (
   question: string,
   history: HistoryMessage[]
 ): number | null => {
@@ -57,7 +57,7 @@ const resolvePageFromHistory = (
  * Builds a formatted conversation history string for the LLM prompt.
  * Only includes the most recent messages to stay within reasonable token limits.
  */
-const buildConversationContext = (history: HistoryMessage[]): string => {
+export const buildConversationContext = (history: HistoryMessage[]): string => {
   if (history.length === 0) return "";
 
   const formatted = history
@@ -112,15 +112,21 @@ export const chatWithDocument = async (
 
     const pageChunks = await Chunk.find({ 
       documentId: document._id, 
-      startOffset: { $lte: pageMeta.endOffset },
-      endOffset: { $gte: pageMeta.startOffset }
+      startOffset: { $lt: pageMeta.endOffset },
+      endOffset: { $gt: pageMeta.startOffset }
     })
       .sort({ chunkIndex: 1 })
       .exec();
 
     if (pageChunks.length > 0) {
-      topChunks = pageChunks.map((chunk) => ({ chunk, score: 1.0 }));
-      isPageSpecific = true;
+      const MAX_CONTEXT_CHARS = 9000;
+      let usedChars = 0;
+      for (const chunk of pageChunks) {
+        if (usedChars + chunk.content.length > MAX_CONTEXT_CHARS) break;
+        topChunks.push({ chunk, score: 1.0 });
+        usedChars += chunk.content.length;
+      }
+      isPageSpecific = topChunks.length > 0;
     }
   }
 
