@@ -53,6 +53,21 @@ export const resolvePageFromHistory = (
   return null;
 };
 
+/** Keep page-specific prompt context within a predictable character budget. */
+export const limitContextByCharacters = <T extends { content: string }>(
+  chunks: T[],
+  maxChars = 9000
+): T[] => {
+  const selected: T[] = [];
+  let usedChars = 0;
+  for (const chunk of chunks) {
+    if (usedChars + chunk.content.length > maxChars) break;
+    selected.push(chunk);
+    usedChars += chunk.content.length;
+  }
+  return selected;
+};
+
 /**
  * Builds a formatted conversation history string for the LLM prompt.
  * Only includes the most recent messages to stay within reasonable token limits.
@@ -119,13 +134,7 @@ export const chatWithDocument = async (
       .exec();
 
     if (pageChunks.length > 0) {
-      const MAX_CONTEXT_CHARS = 9000;
-      let usedChars = 0;
-      for (const chunk of pageChunks) {
-        if (usedChars + chunk.content.length > MAX_CONTEXT_CHARS) break;
-        topChunks.push({ chunk, score: 1.0 });
-        usedChars += chunk.content.length;
-      }
+      topChunks = limitContextByCharacters(pageChunks).map((chunk) => ({ chunk, score: 1.0 }));
       isPageSpecific = topChunks.length > 0;
     }
   }
