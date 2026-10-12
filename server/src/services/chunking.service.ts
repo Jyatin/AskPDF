@@ -138,7 +138,7 @@ const applyOverlap = (rawChunks: string[], overlap: number): string[] => {
   return result;
 };
 
-const getPageNumberForOffset = (
+export const getPageNumberForOffset = (
   offset: number,
   pageOffsets: { pageNumber: number; startOffset: number; endOffset: number }[]
 ): number => {
@@ -146,7 +146,7 @@ const getPageNumberForOffset = (
     return 1;
   }
   const page = pageOffsets.find(
-    (p) => offset >= p.startOffset && offset <= p.endOffset
+    (p) => offset >= p.startOffset && offset < p.endOffset
   );
   if (page) {
     return page.pageNumber;

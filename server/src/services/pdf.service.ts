@@ -14,11 +14,39 @@ export interface PDFExtractionResult {
   pageOffsets: PageOffset[];
 }
 
+/**
+ * Build the canonical document text and page offsets from the same string.
+ * End offsets are exclusive: [startOffset, endOffset).
+ */
+export const buildPDFExtractionResult = (
+  pageTexts: string[],
+  pageCount: number = pageTexts.length
+): PDFExtractionResult => {
+  const pages = pageTexts.map((pageText) => (pageText ?? "").trim());
+  let text = "";
+  const pageOffsets: PageOffset[] = [];
+
+  pages.forEach((pageText, index) => {
+    if (index > 0) text += "\n\n";
+    const startOffset = text.length;
+    text += pageText;
+    pageOffsets.push({
+      pageNumber: index + 1,
+      startOffset,
+      endOffset: text.length,
+    });
+  });
+
+  return {
+    text,
+    pageCount,
+    textLength: text.length,
+    pageOffsets,
+  };
+};
+
 const extractTextFromPDF = async (filePath: string): Promise<PDFExtractionResult> => {
   const buffer = await fs.readFile(filePath);
-  console.log(`[extractTextFromPDF] filePath: ${filePath}`);
-  console.log(`[extractTextFromPDF] buffer length: ${buffer.length}`);
-
   const pageTexts: string[] = [];
 
   const options = {
@@ -28,7 +56,7 @@ const extractTextFromPDF = async (filePath: string): Promise<PDFExtractionResult
         disableCombineTextItems: false,
       });
 
-      let lastY;
+      let lastY: number | undefined;
       let text = "";
       for (const item of textContent.items) {
         if (lastY === item.transform[5] || !lastY) {
@@ -39,38 +67,14 @@ const extractTextFromPDF = async (filePath: string): Promise<PDFExtractionResult
         lastY = item.transform[5];
       }
 
-      const pageNumber = pageData.pageIndex + 1;
-      pageTexts[pageNumber - 1] = text;
+      pageTexts[pageData.pageIndex] = text;
       return text;
     },
   };
 
   const data = await pdfParse(new Uint8Array(buffer), options);
-  const text = data.text.trim();
-
-  // Compute character offsets for each page based on pdf-parse's concatenation:
-  // ret.text = `${ret.text}\n\n${pageText}` starting with ret.text = ""
-  const pageOffsets: PageOffset[] = [];
-  let currentOffset = 0;
-  for (let i = 0; i < pageTexts.length; i++) {
-    const pageText = pageTexts[i] || "";
-    const pageNumber = i + 1;
-    const startOffset = currentOffset + 2; // account for prepended "\n\n"
-    const endOffset = startOffset + pageText.length;
-    pageOffsets.push({
-      pageNumber,
-      startOffset,
-      endOffset,
-    });
-    currentOffset = endOffset;
-  }
-
-  return {
-    text,
-    pageCount: data.numpages,
-    textLength: text.length,
-    pageOffsets,
-  };
+  // Do not use data.text.trim(): offsets must be calculated against this exact text.
+  return buildPDFExtractionResult(pageTexts, data.numpages);
 };
 
 export { extractTextFromPDF };
