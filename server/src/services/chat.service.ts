@@ -39,7 +39,7 @@ export const resolvePageFromHistory = (
   if (detectPageNumber(question) !== null) return null;
 
   // Check for anaphoric/follow-up patterns
-  const followUpPatterns = /\b(there|that page|this page|that section|this section|mentioned there|mentioned above|the same page|same page|it|this|that|above|previous|earlier|the page)\b/i;
+  const followUpPatterns = /\b(that page|this page|the same page|same page|on it|mentioned (there|above))\b/i;
   if (!followUpPatterns.test(question)) return null;
 
   // Scan history backward for the most recent user message with a page reference
